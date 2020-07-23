@@ -2,7 +2,7 @@
 // import { map, take, mergeMap, catchError } from 'rxjs/operators'
 import { webSocket, WebSocketSubject } from "rxjs/webSocket";
 import { WebSocketClient } from "./web-socket-client";
-import { domainToUnicode } from "url";
+import { of } from "rxjs";
 
 type Message = { type: string };
 
@@ -43,23 +43,31 @@ function isMessage(value: unknown): value is Message {
 // subA.unsubscribe();
 
 const client = new WebSocketClient("ws://localhost", 8081);
-const observable = client.multiplex<Message>(
-  () => ("StartNotifyCommand"),
-  () => ("StopNotifyCommand"),
-  message => true,
-);
-const other = client.multiplex<Message>(
-  () => ("StartNotifyCommand"),
-  () => ("StopNotifyCommand"),
-  message => isMessage(message) ? message.type === 'A' : false,
-)
+// const observable = client.multiplex<Message>(
+//   () => ("StartNotifyCommand"),
+//   () => ("StopNotifyCommand"),
+//   message => true,
+// );
+// const other = client.multiplex<Message>(
+//   () => ("StartNotifyCommand"),
+//   () => ("StopNotifyCommand"),
+//   message => isMessage(message) ? message.type === 'A' : false,
+// )
 
-const subscription = observable.subscribe(value => console.log(value));
+// const subscription = observable.subscribe(value => console.log(value));
 
-const othersub = other.subscribe(value => console.log(value.type));
+// const othersub = other.subscribe(value => console.log(value.type));
 
-setTimeout(() => {
-  subscription.unsubscribe();
+const somethingCommand$ = client.connect("NotifySomethingCommand");
+const sub = somethingCommand$.subscribe(message => console.log(message));
 
-  othersub.unsubscribe();  
-}, 1000);
+setTimeout(() => sub.unsubscribe(), 3000);
+
+const sub2 = somethingCommand$.subscribe();
+setTimeout(() => sub2.unsubscribe(), 10000);
+
+// setTimeout(() => {
+//   subscription.unsubscribe();
+
+//   othersub.unsubscribe();  
+// }, 1000);
