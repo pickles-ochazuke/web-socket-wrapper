@@ -1,7 +1,6 @@
 import { webSocket, WebSocketSubject } from "rxjs/webSocket";
 import { Observable } from "rxjs/internal/Observable";
 import { publish, refCount } from "rxjs/operators";
-import { ConnectableObservable } from "rxjs";
 
 export type CommandObject = {
   "Command": string,
@@ -21,11 +20,7 @@ function isCommandObject(value: unknown): value is CommandObject {
 export class WebSocketClient {
 
   private subject$: WebSocketSubject<unknown>;
-
-  get observable$(): Observable<unknown> {
-    return this.subject$.asObservable();
-  }
-
+  
   constructor(url: string, port: number) {
     this.subject$ = webSocket(`${url}:${port}`);
   }
@@ -38,16 +33,8 @@ export class WebSocketClient {
     const startFn = () => `Start${commandName}`;
     const stopFn = () => `Stop${commandName}`;
     
-    const isFunc = this.generateIs(commandName); 
     const filterFn = (message: unknown) => isCommandObject(message) ? message.Command === commandName : false;
 
-    return this.multiplex(startFn, stopFn, filterFn).pipe(publish(), refCount());
-  }
-
-  private generateIs<T extends CommandObject>(command: string): (value: unknown) => value is T {
-    
-    return ((value: unknown): value is T => {
-      return (typeof value === 'object') && (typeof (value as T).Command === command);
-    })
+    return this.multiplex<CommandObject>(startFn, stopFn, filterFn).pipe(publish(), refCount());
   }
 }
