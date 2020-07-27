@@ -1,6 +1,7 @@
 import { webSocket, WebSocketSubject } from "rxjs/webSocket";
 import { Observable } from "rxjs/internal/Observable";
 import { publish, refCount } from "rxjs/operators";
+import { timeStamp } from "console";
 
 export type CommandObject = {
   "Command": string,
@@ -19,10 +20,30 @@ function isCommandObject(value: unknown): value is CommandObject {
  */
 export class WebSocketClient {
 
+  private queue: Observable<any>[] = [];
   private subject$: WebSocketSubject<unknown>;
   
   constructor(url: string, port: number) {
-    this.subject$ = webSocket(`${url}:${port}`);
+    this.subject$ = webSocket({
+      url: `${url}:${port}`,
+      openObserver: {
+        next: () => console.log('Websocket is Opened'),
+        error: () => console.log('Websocket Opening is Error!')
+      },
+      closeObserver: {
+        next: () => console.log('Websocket is Closed'),
+        error: () => console.log('Websocket is Error')
+      },
+      closingObserver: {
+        next: () => console.log('Websocket is Closing'),
+        error: () => console.log('Websocket is Error')
+      },
+      
+    });
+  }
+
+  close() {
+    this.subject$.unsubscribe();
   }
 
   private multiplex<T>(subscribe: () => any, unsubscribe: () => any, filter: (value: unknown) => boolean): Observable<T> {

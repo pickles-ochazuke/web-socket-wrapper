@@ -43,6 +43,7 @@ function isMessage(value: unknown): value is Message {
 // subA.unsubscribe();
 
 const client = new WebSocketClient("ws://localhost", 8081);
+
 // const observable = client.multiplex<Message>(
 //   () => ("StartNotifyCommand"),
 //   () => ("StopNotifyCommand"),
@@ -59,15 +60,22 @@ const client = new WebSocketClient("ws://localhost", 8081);
 // const othersub = other.subscribe(value => console.log(value.type));
 
 const somethingCommand$ = client.connect("NotifySomethingCommand");
-const sub = somethingCommand$.subscribe(message => console.log(message));
+const sub = somethingCommand$.subscribe({
+    next: message => console.log(message),
+    error: message => console.log(message)
+  });
+
+// setTimeout(() => client.close(), 2000);
+
+const sub2 = somethingCommand$.subscribe({
+  next: message => console.log('next: sub2'),
+  error: message => console.log('error: sub2')
+});
+// setTimeout(() => sub2.unsubscribe(), 10000);
 
 setTimeout(() => sub.unsubscribe(), 3000);
-
-const sub2 = somethingCommand$.subscribe();
-setTimeout(() => sub2.unsubscribe(), 10000);
-
 // setTimeout(() => {
 //   subscription.unsubscribe();
-
+ 
 //   othersub.unsubscribe();  
 // }, 1000);
