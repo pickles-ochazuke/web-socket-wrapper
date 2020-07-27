@@ -1,7 +1,6 @@
 import { webSocket, WebSocketSubject } from "rxjs/webSocket";
 import { Observable } from "rxjs/internal/Observable";
 import { publish, refCount } from "rxjs/operators";
-import { timeStamp } from "console";
 
 export type CommandObject = {
   "Command": string,
